@@ -7,7 +7,7 @@ function plot_fit_grid(ipol,grid::String; folder::String="fit_grid")
     plot_fit_grid(ipol,gridsorted,folder)
 end
 
-function plot_fit_grid(ipol,grid::Vector{Observablecontainer}; folder::String="fit_grid", par_mask=[true for i in 1:length(grid[1].hc[1].parname)],LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",cubic=false)
+function plot_fit_grid(ipol,grid::Vector{Observablecontainer}; folder::String="fit_grid", par_mask=[true for i in 1:length(grid[1].hc[1].parname)],LIST="",cubic=false)
     prepath = pwd()
     mkpath(folder)
     hist_names = ipol[:,1]
