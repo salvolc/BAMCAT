@@ -175,7 +175,7 @@ function getobsname(file::String, obsname::String)
     file_format[index][1][3]
 end
 
-function give_category_of_obs(;obsname="",LIST="/ceph/groups/e4/users/slacagnina/overH70222/category_list.txt")
+function give_category_of_obs(;obsname="",LIST="")
     lbl = readlines(LIST)
     for i in 1:length(lbl)
         ls = [replace(j," " => "") for j in split(lbl[i],"&")]
@@ -482,7 +482,7 @@ function ipol_chisqprob_lists(ipol;name="",folder="fit",dof=0)
     close(f)
 end
 
-function ipol_chisqprob_lists_constr(ipol;name="",folder="fit",LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",dof=0)
+function ipol_chisqprob_lists_constr(ipol;name="",folder="fit",LIST="",dof=0)
     PREFIX = folder
     name=string(name,"_constr")
     mkpath(folder)

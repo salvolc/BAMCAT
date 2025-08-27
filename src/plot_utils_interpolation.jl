@@ -219,7 +219,7 @@ function plot_chisqprob(ipol;name="",folder="fit",dof=0)
 
 end
 
-function plot_chisqprob_constr(ipol;name="",folder="fit",LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",dof=0)
+function plot_chisqprob_constr(ipol;name="",folder="fit",LIST="",dof=0)
     PREFIX = folder
     name = string(name,"_constr")
     mkpath(folder)
@@ -432,7 +432,7 @@ end
 function plot_chired_for_chisqprob_constr(ipol;
     name="",
     folder="fit",
-    LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",
+    LIST="",
     xmax=15,
     dof=0,
     recalc=false,
@@ -539,7 +539,7 @@ function plot_chired_for_chisqprob_constr(ipol;
     savefig(string(PREFIX,"/",name,"_redchi_nozero_05.pdf"))
 end
 
-function recalc_pulls(ipol,sorted;LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",skip_neg=true,old=false)
+function recalc_pulls(ipol,sorted;LIST="",skip_neg=true,old=false)
     nameobs = ipol[:,1]
     binedges = ipol[:,2]
     params = get_clean_params_from_mc(sorted)
@@ -635,7 +635,7 @@ end
 
 function recalc_chired_ipolerr(ipol,sorted;
     #folder="chired_ipolerr",
-    LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",
+    LIST="",
     combine_err = false,
     full = false,
     filter=true,

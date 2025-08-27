@@ -54,14 +54,14 @@ function propagate_error_for_iobs(resamples,ipol,keys,g_func,iobs;p=0.68,atol=0.
     (prop_error_iobs,prop_error_asy_iobs,prop_error_hists)
 end
 
-function filter_err_prop(prop_err;LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt")
+function filter_err_prop(prop_err;LIST="")
     all = hcat([prop_err[i] for i in 1:length(prop_err)]...)
     indx = findall(x->getweight(LIST,x,weight=0)!=0,prop_err.names)
     all_filt = all[indx,:]
     prop_err_filt = (names=all_filt[:,1],prop_err=all_filt[:,2],prop_err_int=all_filt[:,3],prop_err_hists=all_filt[:,4])
 end
 
-function give_plots_err_prop(prop_err_filt;LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt")
+function give_plots_err_prop(prop_err_filt;LIST="")
     plts = []
     plts_obs = []
     for iobs in 1:length(prop_err_filt.names)
@@ -81,7 +81,7 @@ function give_plots_err_prop(prop_err_filt;LIST="/ceph/groups/e4/users/slacagnin
 end
 
 function give_plots_err_prop_for_obs(prop_err_filt,obsname)
-    plts,plts_obs = give_plots_err_prop(prop_err_filt;LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt")
+    plts,plts_obs = give_plots_err_prop(prop_err_filt;LIST="")
     vcat([i.plts for i in plts_obs[give_all_str(obsname,prop_err_filt.names)]]...)
 end
 
@@ -89,7 +89,7 @@ function plot_err_prop_for_obs(prop_err_filt,obsname;folder="./err_prop_bins/",P
     indx = give_all_str(obsname,prop_err_filt.names)
     plts, plts_obs = give_plots_err_prop(prop_err_filt)
     for i in indx
-        fname = getobsname("/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",prop_err_filt.names[i])
+        fname = getobsname("",prop_err_filt.names[i])
         fname = replace(replace(replace(fname,"\\"=>""),"\$"=>""),"/"=>"")
         mkpath(string(folder,obsname))
         pltbins = plts_obs[i].plts

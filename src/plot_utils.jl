@@ -298,7 +298,7 @@ function plot_fit_ranges(ipol, sorted; folder::String="fit_per_obs_filled",cubic
     end
 end
 
-function plot_fit_ranges_data(ipol,sorted,rivet_data_path; folder::String="fit_per_obs_filled_data",par_mask=[true for i in 1:length(sorted[1].hc[1].parname)],LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",cubic=false)
+function plot_fit_ranges_data(ipol,sorted,rivet_data_path; folder::String="fit_per_obs_filled_data",par_mask=[true for i in 1:length(sorted[1].hc[1].parname)],LIST="",cubic=false)
     names = ipol[:,1]
     params = get_clean_params_from_mc(sorted)
     params = params[:,par_mask]
@@ -440,7 +440,7 @@ function plot_fit_ranges_data_ylog(
     folder::String="fit_per_obs_filled_data", 
     obsnum::Int64=-1,
     par_mask=[true for i in 1:length(sorted[1].hc[1].parname)],
-    LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",
+    LIST="",
     cubic=false,
     PDF=false,
     )
@@ -718,11 +718,11 @@ end
 function plot_tuned_chisq(ipol;
     NOMINAL_PATH::String="",
     TUNED_PATH::String="",
-    RIVET_DATA_PATH="/ceph/groups/e4/users/slacagnina/Programs/new/Herwig7/share/Rivet/",
+    RIVET_DATA_PATH="Programs/new/Herwig7/share/Rivet/",
     folder="./chisq_tune/tune/",
-    MCPATH = "/ceph/groups/e4/users/slacagnina/overH70222/grid_inputs_H7_v42/",
-    CONSTR = "/ceph/groups/e4/users/slacagnina/overH70222/bad_data.txt",
-    LIST = "/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",
+    MCPATH = "grid_inputs_H7_v42/",
+    CONSTR = "bad_data.txt",
+    LIST = "longlist_raw.txt",
     NAME_NOMINAL="Nominal",
     NAME_TUNED="Tuned",
     prop_err=[],
@@ -933,7 +933,6 @@ function plot_tuned_chisq(ipol;
     (names=all_names,pval_nom = chisq_prob_nom, pval_tune = chisq_prob_tune)
 end
 
-
 function plot_corr_matrix(
     samples,
     parameter_names,
@@ -997,10 +996,10 @@ function plot_tuned_obs(ipol;
     NOMINAL_PATH::String="",
     TUNED_PATH::String="",
     folder="./tuned_obs/",
-    MCPATH = "/ceph/groups/e4/users/slacagnina/overH70222/grid_inputs_H7_v42/",
-    RIVET_DATA_PATH="/ceph/groups/e4/users/slacagnina/Programs/new/Herwig7/share/Rivet/",
-    CONSTR = "/ceph/groups/e4/users/slacagnina/overH70222/bad_data.txt",
-    LIST = "/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",
+    MCPATH = "grid_inputs_H7_v42/",
+    RIVET_DATA_PATH="new/Herwig7/share/Rivet/",
+    CONSTR = "bad_data.txt",
+    LIST = "longlist_raw.txt",
     NAME_NOMINAL="Nominal",
     NAME_TUNED="Tuned",
     islog=false,
@@ -1245,7 +1244,6 @@ function plot_tuned_obs(ipol;
     #return bad_ps
 end
 
-
 function plot_mc_v_data(;
     binmids=[],
     data_bins=[],
@@ -1444,7 +1442,6 @@ function plot_mc_v_data(;
 
     return (plt1=pltr1,plt2=pltr2,plt3=pltr3,plt4=pltr4,plt5=pltr5)
 end
-
 
 function plot_two_hist_with_ratio(h1,h2;
     h1err=[],h2err=[],ylog=true,h1label="",h2label="",rylim=[],xlabel="",xlim=[],xplotscale=:identity,ylim=[],yscale=:identity

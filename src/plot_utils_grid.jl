@@ -93,7 +93,7 @@ function plot_fit_grid(ipol,grid::Vector{Observablecontainer}; folder::String="f
     end
 end
 
-function plot_fit_grid_pulls_2(ipol,grid::Vector{Observablecontainer}; folder::String="fit_grid", par_mask=[true for i in 1:length(grid[1].hc[1].parname)],LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",cubic=false,pdf=false,inbound=false,pro=0.10)
+function plot_fit_grid_pulls_2(ipol,grid::Vector{Observablecontainer}; folder::String="fit_grid", par_mask=[true for i in 1:length(grid[1].hc[1].parname)],LIST="",cubic=false,pdf=false,inbound=false,pro=0.10)
     prepath = pwd()
     mkpath(folder)
     hist_names = ipol[:,1]
@@ -312,7 +312,7 @@ function plot_fit_grid_pulls_2(ipol,grid::Vector{Observablecontainer}; folder::S
     end
 end
 
-function calc_fit_grid_pulls(ipol,grid::Vector{Observablecontainer}; skip_neg=false, folder::String="fit_grid", par_mask=[true for i in 1:length(grid[1].hc[1].parname)],LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",cubic=false,inbound=false)
+function calc_fit_grid_pulls(ipol,grid::Vector{Observablecontainer}; skip_neg=false, folder::String="fit_grid", par_mask=[true for i in 1:length(grid[1].hc[1].parname)],LIST="",cubic=false,inbound=false)
     prepath = pwd()
     mkpath(folder)
     hist_names = ipol[:,1]
@@ -529,7 +529,7 @@ end
 function plot_fit_grid_pulls(ipol,grid::Vector{Observablecontainer}; 
     folder::String="fit_grid", 
     par_mask=[true for i in 1:length(grid[1].hc[1].parname)],
-    LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",
+    LIST="",
     cubic=false,
     pdf=false,
     inbound=false,
@@ -768,7 +768,7 @@ function plot_fit_grid_pulls(ipol,grid::Vector{Observablecontainer};
     end
 end
 
-function plot_sensitivities(ipol,gridsorted::Vector{Observablecontainer}; folder::String="sens", par_mask=[true for i in 1:length(gridsorted[1].hc[1].parname)],LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt",cubic=false,pdf=false,inbound=false,pro=0.10,parnames=[])
+function plot_sensitivities(ipol,gridsorted::Vector{Observablecontainer}; folder::String="sens", par_mask=[true for i in 1:length(gridsorted[1].hc[1].parname)],LIST="",cubic=false,pdf=false,inbound=false,pro=0.10,parnames=[])
 
     prepath = pwd()
     mkpath(folder)
@@ -938,7 +938,6 @@ function plot_sensitivities(ipol,gridsorted::Vector{Observablecontainer}; folder
     end
     [full_sens,full_sens_ipol]
 end
-
 
 function print_sens_table(fullsens;fname="",header=[],baddims=[],iround=true,imean=true)
     meansens=[]
