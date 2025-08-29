@@ -176,6 +176,46 @@ function fit_a_bin(g,parameters,values,ibin,p0=1;cubic=false)
     return fit_res
 end
 
+function interpolate_a_bin(parameters, values, ibin)
+    # Extract cleaned data
+    binval, param_clean = clean_binvals_paramaters(values, parameters, ibin)
+    binval = convert(Vector{Float64}, binval)
+    param_clean = convert(Matrix{Float64}, param_clean)  # shape: (npoints, nparams)
+
+    nparams = size(param_clean, 2)
+
+    # Build sorted unique grids for each parameter dimension
+    grids = [sort(unique(param_clean[:, d])) for d in 1:nparams]
+
+    # Build lookup dict from param tuples → value
+    lookup = Dict{NTuple{nparams, Float64}, Float64}(
+        Tuple(param_clean[i, :]) => binval[i] for i in 1:length(binval)
+    )
+
+    # Build N-dimensional data array
+    dims = map(length, grids)
+    data = Array{Float64}(undef, dims...)
+
+    # Fill the array with corresponding values
+    for idx in CartesianIndices(data)
+        key = ntuple(d -> grids[d][idx[d]], nparams)
+        data[idx] = lookup[key]
+    end
+
+    # Construct interpolator
+    itp = interpolate(Tuple(grids), data, Gridded(Linear()))
+
+    # (Optional) validation check
+    for i in 1:length(binval)
+        v_interp = itp(param_clean[i, :]...)
+        if v_interp != binval[i]
+            println("Interpolation mismatch at index $i: $v_interp != $(binval[i])")
+        end
+    end
+
+    return itp
+end
+
 function chisq(x,y)
     chi_square = 0
     for i in 1:length(x)
@@ -293,6 +333,33 @@ function calculate_fit_for_observables(container::Observablecontainer; par_mask=
     return [fit_coefficiants,chi_test_res,covvars]
 end
 
+function calculate_fit_for_observables_with_linear_interpolation(container::Observablecontainer; par_mask=[true for i in 1:length(container.hc[1].parname)],cubic=false)
+    values = get_bin_value_for_observable(container)
+    sumw2 = get_sumw2_for_obervable(container)
+    binedges = get_bin_edges_for_observables(container)
+    binlen = binedges[2:end] .- binedges[1:end-1]
+    allparams = values[:,2]
+    params = [allparams[i][par_mask,:] for i in 1:length(allparams)]
+    n_params = Int(length(params[1])/2)
+    n_values = length(params)
+    n_bins = length(values[1,:])-2
+    params_clean = Array{Float64,1}[]
+    for i in params
+        subparams = []
+        for j in 1:n_params
+            push!(subparams,i[n_params+j])
+        end
+        push!(params_clean,subparams)
+    end
+    params_clean = transpose(reshape(vcat(params_clean...),n_params,n_values))
+    chi_test_res = []
+    interpolants = Matrix{Any}(undef, n_bins, 1)
+    for i_bin in 1:n_bins
+        interpolants[i_bin, 1] = interpolate_a_bin(params_clean, values, i_bin)
+    end
+    return [interpolants,chi_test_res]
+end
+
 function do_ipol_prof(container::Vector{Observablecontainer};do_chi_sq=true,LIST="/ceph/groups/e4/users/slacagnina/overH70222/longlist_raw.txt")
     observables = get_observables_from_container(container)
     binedges = []
@@ -339,11 +406,27 @@ function do_ipol_prof(container::Vector{Observablecontainer};do_chi_sq=true,LIST
     hcat(goodobs,binedges,coefficiants)
 end
 
-function do_ipol(container::Vector{Observablecontainer};par_mask=[true for i in 1:length(container[1].hc[1].parname)],parallel=true,prof=false,cubic=false)
+function do_ipol(container::Vector{Observablecontainer};par_mask=[true for i in 1:length(container[1].hc[1].parname)],parallel=true, model::Symbol=:cubic)
+    allowed_models = [:linear_grid, :quadratic, :cubic, :prof]
+
+    @assert model in allowed_models "Invalid model: $model"
+
+    if model == :cubic
+        cubic = true
+    else
+        cubic = false
+    end
+
     if parallel
-        do_ipol_par(container::Vector{Observablecontainer},par_mask=par_mask,cubic=cubic)
-    elseif prof
+        if model == :quadratic || model == :cubic || model == :linear_grid
+            do_ipol_par(container::Vector{Observablecontainer},par_mask=par_mask,cubic=cubic, model=model)
+        elseif model == :prof
+            throw(ArgumentError("The professor method is only possible with parallel = false"))
+        end
+    elseif model == :prof
         do_ipol_prof(container::Vector{Observablecontainer})
+    elseif model == :linear
+        throw(ArgumentError("The linear interpolation is only possible with parallel = true"))
     else
         do_ipol_nonpar(container::Vector{Observablecontainer},par_mask=par_mask,cubic=cubic)
     end
@@ -363,11 +446,11 @@ function do_ipol_nonpar(container::Vector{Observablecontainer};par_mask=[true fo
     hcat(observables,binedges,coefficiants)
 end
 
-function do_ipol_par(container::Vector{Observablecontainer};par_mask=[true for i in 1:length(container[1].hc[1].parname)],cubic=false)
+function do_ipol_par(container::Vector{Observablecontainer};par_mask=[true for i in 1:length(container[1].hc[1].parname)],cubic=false, model::Symbol=:cubic)
     observables = get_observables_from_container(container)
     binedges = Vector{Vector{Float64}}(undef,length(observables))
     coefficiants = Vector{Vector{Matrix{Float64}}}(undef,length(observables))
-    result = Folds.collect( do_ipol_step(i,observables,container,par_mask=par_mask,cubic=cubic) for i in 1:length(observables) )
+    result = Folds.collect( do_ipol_step(i,observables,container,par_mask=par_mask,cubic=cubic, model=model) for i in 1:length(observables) )
     resultform = Matrix{Any}(undef,length(result),3)
     for i in 1:length(result)
     	resultform[i,1] = result[i][1][i]
@@ -377,10 +460,14 @@ function do_ipol_par(container::Vector{Observablecontainer};par_mask=[true for i
     return resultform
 end
 
-function do_ipol_step(i::Int,observables::Vector{String},container::Vector{Observablecontainer};par_mask=[true for i in 1:length(container[1].hc[1].parname)],cubic=false)
+function do_ipol_step(i::Int,observables::Vector{String},container::Vector{Observablecontainer};par_mask=[true for i in 1:length(container[1].hc[1].parname)],cubic=false, model::Symbol=:cubic)
     println(string("Calculating Observable Number ",i," out of ",length(observables)," "))
     binedges = get_bin_edges_for_observables(container[i])
-    coefficiants = calculate_fit_for_observables(container[i],par_mask=par_mask,cubic=cubic)
+    if model == :linear_grid
+        coefficiants = calculate_fit_for_observables_with_linear_interpolation(container[i],par_mask=par_mask,cubic=cubic)
+    else 
+        coefficiants = calculate_fit_for_observables(container[i],par_mask=par_mask,cubic=cubic)
+    end
     println(string("Done with ",100*i/length(observables), "%"))
     return [observables,binedges,coefficiants]
 end

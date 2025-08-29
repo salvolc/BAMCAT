@@ -25,13 +25,14 @@ end
 
 
 function load_Histcontainer_from_file(yoda_file::String,params_file::String,file_ID::Int=NaN)
-    file_hists = get_all_histograms(yoda_file)
     file_par = get_paramas_from_file(params_file)
-    file_hists_sumw2 = get_all_sumw2(yoda_file)
-    n_hists  = length(file_hists[:,1])
     par_names = file_par[:,1]
     par_vals = file_par[:,2]
-    println(file_ID)
+    #println(file_ID)
+    #println("yoda_file: ", yoda_file)
+    file_hists = get_all_histograms(yoda_file)
+    file_hists_sumw2 = get_all_sumw2(yoda_file)
+    n_hists  = length(file_hists[:,1])
     container = Vector{Histcontainer}(undef,n_hists)
     for i_hist in 1:n_hists
         @assert file_hists_sumw2[i_hist,1] == file_hists[i_hist,1]
@@ -39,7 +40,6 @@ function load_Histcontainer_from_file(yoda_file::String,params_file::String,file
     end
     container
 end
-
 
 function sort_Histcontainer_by_observable(container::Vector{Vector{Histcontainer}})
     number_of_observables =  length(container[1])
@@ -59,35 +59,7 @@ function sort_Histcontainer_by_observable(container::Vector{Vector{Histcontainer
 end
 
 
-function load_Histcontainer_from_folder(mc_folder::String; mc_numbers::Vector{String}=[])
-    if mc_numbers == []
-        mc_numbers = cd(readdir,mc_folder)
-    end
-    container = Histcontainer[]
-    container = Vector{Histcontainer}[]
-    for i_num in mc_numbers
-        mc_ID = parse(Int64,i_num)
-        files = cd(readdir,string(mc_folder,i_num))
-        println(i_num)
-        yoda_file = files[occursin.(Ref(".yoda"),files)][1]
-        param_file = files[occursin.(Ref("params.dat"),files)][1]
-        tempcont = load_Histcontainer_from_file(string(mc_folder,i_num,"/",yoda_file),string(mc_folder,i_num,"/",param_file),mc_ID)
-        push!(container,tempcont)
-    end
-    container
-end
-
-
-function load_Histcontainer_from_folder(mc_folder::String, parallel::Bool; mc_numbers::Vector{String}=Vector{String}([]))
-    if parallel
-        return load_Histcontainer_from_folder_parallel(mc_folder,mc_numbers=mc_numbers)
-    else
-        return load_Histcontainer_from_folder(mc_folder,mc_numbers=mc_numbers)
-    end
-end
-
-
-function load_Histcontainer_from_folder_parallel(mc_folder::String; mc_numbers::Vector{String}=Vector{String}([]))
+function load_Histcontainer_from_folder(mc_folder::String; mc_numbers::Vector{String}=Vector{String}([]), mode_csv::Bool=false, parallel::Bool=true)
     if mc_numbers == []
         mc_numbers = cd(readdir,mc_folder)
     end
@@ -105,13 +77,22 @@ function load_Histcontainer_from_folder_parallel(mc_folder::String; mc_numbers::
         mc_IDs[i] = parse(Int64,i_num)
         files = cd(readdir,string(mc_folder,i_num))
         println(i_num)
-        yoda_files[i] = files[occursin.(Ref(".yoda"),files)][1]
+        if mode_csv == true
+            yoda_files[i] = files[occursin.(Ref(".csv"),files)][1]
+        else
+            yoda_files[i] = files[occursin.(Ref(".yoda"),files)][1]
+        end
         param_files[i] = files[occursin.(Ref("params.dat"),files)][1]
-        #tempcont = load_Histcontainer_from_file(string(mc_folder,i_num,"/",yoda_file),string(mc_folder,i_num,"/",param_file),mc_ID)
-        #push!(container,tempcont)
+        if parallel == true
+            continue
+        else
+            tempcont = load_Histcontainer_from_file(string(mc_folder,i_num,"/",yoda_file),string(mc_folder,i_num,"/",param_file),mc_ID)
+            push!(container,tempcont)
+        end
     end
-    container = Folds.collect( load_Histcontainer_from_file(string(mc_folder,i_nums[i],"/",yoda_files[i]),string(mc_folder,i_nums[i],"/",param_files[i]),mc_IDs[i]) for i in 1:length(mc_numbers) )
-
+    if parallel == true
+        container = Folds.collect( load_Histcontainer_from_file(string(mc_folder,i_nums[i],"/",yoda_files[i]),string(mc_folder,i_nums[i],"/",param_files[i]),mc_IDs[i]) for i in 1:length(mc_numbers) )
+    end
     container
 end
 

@@ -70,3 +70,15 @@ function test_l()
         g_pro_bin((p=[1,2,3,4,5,6,7],),ones(36))
     end
 end
+
+function make_per_bin_function_linear(itp)
+
+    return x -> begin
+        pvec = hasproperty(x, :p) ? collect(x.p) :
+               x isa NamedTuple    ? [getfield(x,k) for k in keys(x)] :
+                                      collect(x)
+
+        val = itp(pvec...)
+        isnan(val) ? 1e6 : val
+    end
+end
