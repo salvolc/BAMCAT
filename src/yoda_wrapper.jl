@@ -43,15 +43,51 @@ function give_histogram(i,file_lbl,histogram_names=give_histogram_names(file_lbl
     Histogram(vcat(data[1,:],data[2,length(data[1,:])]),data[3,:]./binl)
 end
 
+function give_histogram_csv(i,file_lbl,histogram_names=give_histogram_names(file_lbl))
+    histblock=false
+    datablock=false
+    data = []
+
+    for j in 1:length(file_lbl)
+        line = file_lbl[j]
+
+        if occursin("BEGIN",line)
+            if histogram_names[i] == split(line)[3]
+                histblock = true
+                datablock = true
+                continue
+            end
+        end
+
+        if occursin("END",line)
+            histblock=false
+            datablock=false
+        end
+
+        if datablock
+            push!(data,parse.(Float64,split(line," ")))
+        end
+    end
+    data = hcat(data...)
+    edge = data[1,1:end]
+    values = data[2,1:end-1]
+    Histogram(edge,values)
+end
+
 
 function get_all_histograms(filename)
     io = open(filename, "r")
     file_string = read(io,String)
     file_lbl = split(file_string,"\n")
     names = give_histogram_names(file_lbl)
-    histograms = [give_histogram(i,file_lbl,names) for i in 1:length(names)]
+    if endswith(filename,".csv")
+        histograms = [give_histogram_csv(i,file_lbl,names) for i in 1:length(names)]
+    else
+        histograms = [give_histogram(i,file_lbl,names) for i in 1:length(names)]
+    end
     return hcat(names,histograms)
 end
+
 
 function give_sumw2(i,file_lbl,histogram_names=give_histogram_names(file_lbl),unweighted=false)
     histblock=false
@@ -81,12 +117,42 @@ function give_sumw2(i,file_lbl,histogram_names=give_histogram_names(file_lbl),un
     data[4,:]./binl
 end
 
+function give_sumw2_csv(i,file_lbl,histogram_names=give_histogram_names(file_lbl),unweighted=false)
+    # temp solution because no sumw2 in pythia output
+    histblock=false
+    datablock=false
+    data = []
+    for j in 1:length(file_lbl)
+        line = file_lbl[j]
+        if occursin("BEGIN",line)
+            if histogram_names[i] == split(line)[3]
+                histblock = true
+                datablock = true
+                continue
+            end
+        end
+        if occursin("END",line)
+            histblock=false
+            datablock=false
+        end
+        if datablock
+            push!(data,parse.(Float64,split(line," ")))
+        end
+    end
+    data = hcat(data...)
+    data[3,1:end-1]
+end
+
 function get_all_sumw2(filename)
     io = open(filename, "r")
     file_string = read(io,String)
     file_lbl = split(file_string,"\n")
     names = give_histogram_names(file_lbl)
-    histograms = [give_sumw2(i,file_lbl,names) for i in 1:length(names)]
+    if endswith(filename,".csv")
+        histograms = [give_sumw2_csv(i,file_lbl,names) for i in 1:length(names)]
+    else
+        histograms = [give_sumw2(i,file_lbl,names) for i in 1:length(names)]
+    end
     return hcat(names,histograms)
 end
 

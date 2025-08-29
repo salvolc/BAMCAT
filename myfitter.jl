@@ -25,6 +25,7 @@ using ForwardDiff
 using Measurements
 using StaticArrays
 using BenchmarkTools
+using Interpolations
 include("./src/datatypes.jl")
 include("./src/yoda_wrapper.jl")
 include("./src/fitter.jl")
